@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import ListaTransacciones from './components/ListaTransacciones'
 import './App.css'
 
 function App() {
@@ -16,7 +17,6 @@ function App() {
           .order('id', { ascending: true })
 
         if (error) throw error
-
         setCategorias(data)
       } catch (err) {
         setError(err.message)
@@ -28,12 +28,13 @@ function App() {
     cargarCategorias()
   }, [])
 
-  if (cargando) return <p>Cargando categorías...</p>
+  if (cargando) return <p>Cargando...</p>
   if (error) return <p style={{ color: 'red' }}>Error: {error}</p>
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
       <h1>💰 Money Tracker</h1>
+
       <h2>Mis categorías ({categorias.length})</h2>
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {categorias.map((cat) => (
@@ -55,6 +56,8 @@ function App() {
           </li>
         ))}
       </ul>
+
+      <ListaTransacciones />
     </div>
   )
 }
