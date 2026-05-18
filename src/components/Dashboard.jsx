@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-function Dashboard({ recargar }) {
+function Dashboard({ recargar, mes, setMes, año, setAño }) {
 const [presupuestos, setPresupuestos] = useState([])
 const [cargando, setCargando] = useState(true)
 const [error, setError] = useState(null)
-
-  // Mes y año actuales (por defecto)
-const hoy = new Date()
-  const [mes, setMes] = useState(hoy.getMonth() + 1) // getMonth() devuelve 0-11
-const [año, setAño] = useState(hoy.getFullYear())
 
 useEffect(() => {
     async function cargarPresupuestos() {
@@ -44,10 +39,10 @@ const formatearMonto = (monto) => {
 
   // Color de la barra según el % usado
 const getColorBarra = (porcentaje) => {
-    if (porcentaje >= 100) return '#EF4444' // rojo: te pasaste
-    if (porcentaje >= 80) return '#F59E0B'  // naranja: cuidado
-    if (porcentaje >= 60) return '#FBBF24'  // amarillo: vas medio alto
-    return '#10B981'                        // verde: vas bien
+    if (porcentaje >= 100) return '#EF4444'
+    if (porcentaje >= 80) return '#F59E0B'
+    if (porcentaje >= 60) return '#FBBF24'
+    return '#10B981'
 }
 
   // Mensaje según el % usado
@@ -60,15 +55,22 @@ const getMensaje = (porcentaje) => {
 
 const meses = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
 
 if (cargando) return <p>Cargando dashboard...</p>
 if (error) return <p style={{ color: 'red' }}>Error: {error}</p>
 
 return (
-    <div style={{ marginBottom: '2rem' }}>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+    <div>
+    <div
+        style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '1rem',
+        }}
+    >
         <h2 style={{ margin: 0 }}>📊 Dashboard</h2>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
         <select
@@ -77,7 +79,9 @@ return (
             style={selectStyle}
         >
             {meses.map((nombre, i) => (
-            <option key={i + 1} value={i + 1}>{nombre}</option>
+            <option key={i + 1} value={i + 1}>
+                {nombre}
+            </option>
             ))}
         </select>
         <select
@@ -86,7 +90,9 @@ return (
             style={selectStyle}
         >
             {[2025, 2026, 2027].map((y) => (
-            <option key={y} value={y}>{y}</option>
+            <option key={y} value={y}>
+                {y}
+            </option>
             ))}
         </select>
         </div>
@@ -100,7 +106,7 @@ return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {presupuestos.map((p) => {
             const colorBarra = getColorBarra(p.porcentaje_usado)
-            const anchoBarra = Math.min(p.porcentaje_usado, 100) // máx 100% visualmente
+            const anchoBarra = Math.min(p.porcentaje_usado, 100)
             return (
             <div
                 key={p.budget_id}
@@ -112,21 +118,37 @@ return (
                 color: '#333',
                 }}
             >
-                {/* Header: nombre + porcentaje */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.5rem',
+                }}
+                >
                 <strong style={{ fontSize: '1.1em' }}>{p.categoria}</strong>
                 <span style={{ fontWeight: 'bold', color: colorBarra }}>
                     {p.porcentaje_usado}%
                 </span>
                 </div>
 
-                {/* Montos */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9em', color: '#666', marginBottom: '0.5rem' }}>
-                <span>Gastado: <strong style={{ color: '#333' }}>{formatearMonto(p.gastado)}</strong></span>
-                <span>Disponible: <strong style={{ color: '#333' }}>{formatearMonto(p.disponible)}</strong></span>
+                <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '0.9em',
+                    color: '#666',
+                    marginBottom: '0.5rem',
+                }}
+                >
+                <span>
+                    Gastado: <strong style={{ color: '#333' }}>{formatearMonto(p.gastado)}</strong>
+                </span>
+                <span>
+                    Disponible:{' '}
+                    <strong style={{ color: '#333' }}>{formatearMonto(p.disponible)}</strong>
+                </span>
                 </div>
 
-                {/* Barra de progreso */}
                 <div
                 style={{
                     width: '100%',
@@ -146,14 +168,18 @@ return (
                 />
                 </div>
 
-                {/* Mensaje y presupuesto total */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85em', marginTop: '0.5rem' }}>
+                <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '0.85em',
+                    marginTop: '0.5rem',
+                }}
+                >
                 <span style={{ color: colorBarra, fontWeight: 'bold' }}>
                     {getMensaje(p.porcentaje_usado)}
                 </span>
-                <span style={{ color: '#666' }}>
-                    de {formatearMonto(p.presupuesto)}
-                </span>
+                <span style={{ color: '#666' }}>de {formatearMonto(p.presupuesto)}</span>
                 </div>
             </div>
             )

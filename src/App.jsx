@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase'
 import ListaTransacciones from './components/ListaTransacciones'
 import FormularioTransaccion from './components/FormularioTransaccion'
 import Dashboard from './components/Dashboard'
+import GraficoGastos from './components/GraficoGastos'
 import './App.css'
 
 function App() {
@@ -11,6 +12,11 @@ function App() {
   const [error, setError] = useState(null)
   const [recargarLista, setRecargarLista] = useState(0)
   const [transaccionAEditar, setTransaccionAEditar] = useState(null)
+
+  // Mes/año compartidos entre Dashboard y Gráfico
+  const hoy = new Date()
+  const [mes, setMes] = useState(hoy.getMonth() + 1)
+  const [año, setAño] = useState(hoy.getFullYear())
 
   useEffect(() => {
     async function cargarCategorias() {
@@ -32,18 +38,15 @@ function App() {
     cargarCategorias()
   }, [])
 
-  // Refrescar lista y dashboard cuando se crea o actualiza una transacción
   const handleTransaccionCreada = () => {
     setRecargarLista((prev) => prev + 1)
-    setTransaccionAEditar(null) // Salir del modo edición si estaba
+    setTransaccionAEditar(null)
   }
 
-  // Click en el botón ✏️ de la lista
   const handleEditarTransaccion = (tx) => {
     setTransaccionAEditar(tx)
   }
 
-  // Click en "Cancelar" dentro del formulario
   const handleCancelarEdicion = () => {
     setTransaccionAEditar(null)
   }
@@ -56,13 +59,30 @@ function App() {
       style={{
         padding: '2rem',
         fontFamily: 'sans-serif',
-        maxWidth: '800px',
+        maxWidth: '1100px',
         margin: '0 auto',
       }}
     >
       <h1>💰 Money Tracker</h1>
 
-      <Dashboard recargar={recargarLista} />
+      {/* Dashboard + gráfico lado a lado en pantallas grandes */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
+          gap: '1.5rem',
+          marginBottom: '2rem',
+        }}
+      >
+        <Dashboard
+          recargar={recargarLista}
+          mes={mes}
+          setMes={setMes}
+          año={año}
+          setAño={setAño}
+        />
+        <GraficoGastos recargar={recargarLista} mes={mes} año={año} />
+      </div>
 
       <h2>Mis categorías ({categorias.length})</h2>
       <ul style={{ listStyle: 'none', padding: 0 }}>
