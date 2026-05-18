@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-function ListaTransacciones({ recargar }) {
+function ListaTransacciones({ recargar, onTransaccionEliminada, onEditarTransaccion }) {
 const [transacciones, setTransacciones] = useState([])
 const [cargando, setCargando] = useState(true)
 const [error, setError] = useState(null)
+const [eliminandoId, setEliminandoId] = useState(null)
 
 useEffect(() => {
     async function cargarTransacciones() {
@@ -18,6 +19,7 @@ useEffect(() => {
             tipo,
             descripcion,
             fecha,
+            category_id,
             categories (
             nombre,
             color,
@@ -36,7 +38,28 @@ useEffect(() => {
     }
 
     cargarTransacciones()
-  }, [recargar]) // 👈 cuando cambie 'recargar', se vuelve a ejecutar
+}, [recargar])
+
+const handleEliminar = async (tx) => {
+    const confirmacion = window.confirm(
+    `¿Eliminar esta transacción?\n\n"${tx.descripcion}" — ${formatearMonto(tx.monto)}\n\nEsta acción no se puede deshacer.`
+    )
+    if (!confirmacion) return
+
+    setEliminandoId(tx.id)
+
+    try {
+    const { error } = await supabase.from('transactions').delete().eq('id', tx.id)
+    if (error) throw error
+
+    setTransacciones((prev) => prev.filter((t) => t.id !== tx.id))
+    if (onTransaccionEliminada) onTransaccionEliminada()
+    } catch (err) {
+    alert(`❌ Error al eliminar: ${err.message}`)
+    } finally {
+    setEliminandoId(null)
+    }
+}
 
 const formatearMonto = (monto) => {
     return new Intl.NumberFormat('es-CL', {
@@ -62,6 +85,7 @@ return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {transacciones.map((tx) => {
         const esIngreso = tx.tipo === 'ingreso'
+        const estaEliminando = eliminandoId === tx.id
         return (
             <div
             key={tx.id}
@@ -74,9 +98,11 @@ return (
                 borderRadius: '8px',
                 borderLeft: `4px solid ${tx.categories?.color || '#999'}`,
                 color: '#333',
+                opacity: estaEliminando ? 0.5 : 1,
+                transition: 'opacity 0.2s',
             }}
             >
-            <div>
+            <div style={{ flex: 1 }}>
                 <strong>{tx.descripcion}</strong>
                 <div style={{ fontSize: '0.85em', color: '#666', marginTop: '2px' }}>
                 {tx.categories?.nombre || 'Sin categoría'} · {formatearFecha(tx.fecha)}
@@ -87,10 +113,33 @@ return (
                 fontWeight: 'bold',
                 color: esIngreso ? '#10B981' : '#EF4444',
                 fontSize: '1.05em',
+                marginRight: '1rem',
                 }}
             >
                 {esIngreso ? '+' : '-'} {formatearMonto(tx.monto)}
             </div>
+
+            <button
+                onClick={() => onEditarTransaccion && onEditarTransaccion(tx)}
+                disabled={estaEliminando}
+                title="Editar"
+                style={botonAccionStyle('#3B82F6')}
+                onMouseOver={(e) => (e.currentTarget.style.background = '#dbeafe')}
+                onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+                ✏️
+            </button>
+
+            <button
+                onClick={() => handleEliminar(tx)}
+                disabled={estaEliminando}
+                title="Eliminar"
+                style={botonAccionStyle('#EF4444')}
+                onMouseOver={(e) => (e.currentTarget.style.background = '#fee2e2')}
+                onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+                🗑️
+            </button>
             </div>
         )
         })}
@@ -98,5 +147,16 @@ return (
     </div>
 )
 }
+
+const botonAccionStyle = (color) => ({
+background: 'transparent',
+border: 'none',
+cursor: 'pointer',
+fontSize: '1.1em',
+padding: '0.25rem 0.5rem',
+borderRadius: '4px',
+color: color,
+transition: 'background 0.2s',
+})
 
 export default ListaTransacciones

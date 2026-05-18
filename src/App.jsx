@@ -9,6 +9,7 @@ function App() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
   const [recargarLista, setRecargarLista] = useState(0)
+  const [transaccionAEditar, setTransaccionAEditar] = useState(null)
 
   useEffect(() => {
     async function cargarCategorias() {
@@ -30,9 +31,20 @@ function App() {
     cargarCategorias()
   }, [])
 
-  // Función que pasa al formulario para refrescar la lista
+  // Refrescar lista cuando se crea o actualiza una transacción
   const handleTransaccionCreada = () => {
     setRecargarLista((prev) => prev + 1)
+    setTransaccionAEditar(null) // Salir del modo edición si estaba
+  }
+
+  // Click en el botón ✏️ de la lista
+  const handleEditarTransaccion = (tx) => {
+    setTransaccionAEditar(tx)
+  }
+
+  // Click en "Cancelar" dentro del formulario
+  const handleCancelarEdicion = () => {
+    setTransaccionAEditar(null)
   }
 
   if (cargando) return <p>Cargando...</p>
@@ -71,8 +83,17 @@ function App() {
         ))}
       </ul>
 
-      <FormularioTransaccion onTransaccionCreada={handleTransaccionCreada} />
-      <ListaTransacciones recargar={recargarLista} />
+      <FormularioTransaccion
+        key={transaccionAEditar?.id || 'nuevo'}
+        onTransaccionCreada={handleTransaccionCreada}
+        transaccionAEditar={transaccionAEditar}
+        onCancelarEdicion={handleCancelarEdicion}
+      />
+
+      <ListaTransacciones
+        recargar={recargarLista}
+        onEditarTransaccion={handleEditarTransaccion}
+      />
     </div>
   )
 }
