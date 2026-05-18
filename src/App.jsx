@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import ListaTransacciones from './components/ListaTransacciones'
 import FormularioTransaccion from './components/FormularioTransaccion'
+import Dashboard from './components/Dashboard'
 import './App.css'
 
 function App() {
@@ -31,7 +32,7 @@ function App() {
     cargarCategorias()
   }, [])
 
-  // Refrescar lista cuando se crea o actualiza una transacción
+  // Refrescar lista y dashboard cuando se crea o actualiza una transacción
   const handleTransaccionCreada = () => {
     setRecargarLista((prev) => prev + 1)
     setTransaccionAEditar(null) // Salir del modo edición si estaba
@@ -60,6 +61,8 @@ function App() {
       }}
     >
       <h1>💰 Money Tracker</h1>
+
+      <Dashboard recargar={recargarLista} />
 
       <h2>Mis categorías ({categorias.length})</h2>
       <ul style={{ listStyle: 'none', padding: 0 }}>
