@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-function ListaTransacciones() {
+function ListaTransacciones({ recargar }) {
 const [transacciones, setTransacciones] = useState([])
 const [cargando, setCargando] = useState(true)
 const [error, setError] = useState(null)
@@ -9,6 +9,7 @@ const [error, setError] = useState(null)
 useEffect(() => {
     async function cargarTransacciones() {
     try {
+        setCargando(true)
         const { data, error } = await supabase
         .from('transactions')
         .select(`
@@ -35,9 +36,8 @@ useEffect(() => {
     }
 
     cargarTransacciones()
-}, [])
+  }, [recargar]) // 👈 cuando cambie 'recargar', se vuelve a ejecutar
 
-  // Formatear monto a CLP
 const formatearMonto = (monto) => {
     return new Intl.NumberFormat('es-CL', {
     style: 'currency',
@@ -46,9 +46,8 @@ const formatearMonto = (monto) => {
     }).format(monto)
 }
 
-  // Formatear fecha en español
 const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleDateString('es-CL', {
+    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-CL', {
     day: '2-digit',
     month: 'short',
     })

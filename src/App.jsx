@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import ListaTransacciones from './components/ListaTransacciones'
+import FormularioTransaccion from './components/FormularioTransaccion'
 import './App.css'
 
 function App() {
   const [categorias, setCategorias] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  const [recargarLista, setRecargarLista] = useState(0)
 
   useEffect(() => {
     async function cargarCategorias() {
@@ -28,11 +30,23 @@ function App() {
     cargarCategorias()
   }, [])
 
+  // Función que pasa al formulario para refrescar la lista
+  const handleTransaccionCreada = () => {
+    setRecargarLista((prev) => prev + 1)
+  }
+
   if (cargando) return <p>Cargando...</p>
   if (error) return <p style={{ color: 'red' }}>Error: {error}</p>
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
+    <div
+      style={{
+        padding: '2rem',
+        fontFamily: 'sans-serif',
+        maxWidth: '800px',
+        margin: '0 auto',
+      }}
+    >
       <h1>💰 Money Tracker</h1>
 
       <h2>Mis categorías ({categorias.length})</h2>
@@ -57,7 +71,8 @@ function App() {
         ))}
       </ul>
 
-      <ListaTransacciones />
+      <FormularioTransaccion onTransaccionCreada={handleTransaccionCreada} />
+      <ListaTransacciones recargar={recargarLista} />
     </div>
   )
 }
