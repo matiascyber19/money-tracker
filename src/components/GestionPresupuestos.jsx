@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/AuthContext'
 
 const formatearMonto = (monto) =>
 new Intl.NumberFormat('es-CL', {
@@ -14,6 +15,7 @@ const meses = [
 ]
 
 function GestionPresupuestos({ recargar, mes, año, onPresupuestoActualizado }) {
+const { usuario } = useAuth()
 const [presupuesto, setPresupuesto] = useState(null)
 const [totalGastado, setTotalGastado] = useState(0)
 const [cargando, setCargando] = useState(true)
@@ -29,21 +31,21 @@ useEffect(() => {
         setCargando(true)
         setError(null)
 
-        // Presupuesto del mes
         const { data: presData, error: presError } = await supabase
         .from('monthly_budgets')
         .select('*')
         .eq('mes', mes)
         .eq('año', año)
+        .eq('user_id', usuario.id)
         .maybeSingle()
 
         if (presError) throw presError
 
-        // Total gastado del mes
         const { data: txData, error: txError } = await supabase
         .from('transactions')
         .select('monto')
         .eq('tipo', 'gasto')
+        .eq('user_id', usuario.id)
         .gte('fecha', `${año}-${String(mes).padStart(2, '0')}-01`)
         .lte('fecha', `${año}-${String(mes).padStart(2, '0')}-31`)
 
@@ -62,7 +64,7 @@ useEffect(() => {
     }
 
     cargarDatos()
-}, [mes, año, recargar])
+}, [mes, año, recargar, usuario])
 
 const disponible = presupuesto ? presupuesto.monto_total - totalGastado : 0
 const porcentaje = presupuesto
@@ -100,6 +102,7 @@ const handleGuardar = async () => {
         mes,
         año,
         monto_total: parseFloat(montoInput),
+        user_id: usuario.id,
     }
 
     if (presupuesto) {
@@ -176,7 +179,6 @@ return (
         </div>
     </div>
 
-      {/* Sin presupuesto o modo edición */}
     {(!presupuesto || modoEdicion) && (
         <div className="mb-4">
         <label className="block text-sm font-semibold text-gray-600 mb-1">
@@ -220,10 +222,8 @@ return (
         </div>
     )}
 
-      {/* Resumen cuando hay presupuesto */}
     {presupuesto && !modoEdicion && (
         <>
-          {/* Cifras */}
         <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-white rounded-lg p-3 text-center">
             <p className="text-xs text-gray-500 mb-1">Presupuesto</p>
@@ -241,7 +241,6 @@ return (
             </div>
         </div>
 
-          {/* Barra de progreso */}
         <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
             <div
             className="h-full rounded-full transition-all duration-500"
@@ -249,7 +248,6 @@ return (
             />
         </div>
 
-          {/* Mensaje + porcentaje */}
         <div className="flex justify-between items-center text-sm">
             <span className={`font-bold ${getColorTexto()}`}>{getMensaje()}</span>
             <span className={`font-bold ${getColorTexto()}`}>{porcentaje}% usado</span>

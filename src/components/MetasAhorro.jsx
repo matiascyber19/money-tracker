@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/AuthContext'
 
 const formatearMonto = (monto) =>
 new Intl.NumberFormat('es-CL', {
@@ -25,6 +26,7 @@ fecha_limite: '',
 }
 
 function MetasAhorro() {
+const { usuario } = useAuth()
 const [metas, setMetas] = useState([])
 const [cargando, setCargando] = useState(true)
 const [error, setError] = useState(null)
@@ -33,13 +35,11 @@ const [form, setForm] = useState(formVacio)
 const [guardando, setGuardando] = useState(false)
 const [mensaje, setMensaje] = useState(null)
 const [metaEditando, setMetaEditando] = useState(null)
-
-  // abono: { id, valor }
 const [abono, setAbono] = useState({})
 
 useEffect(() => {
     cargarMetas()
-}, [])
+}, [usuario])
 
 async function cargarMetas() {
     try {
@@ -47,6 +47,7 @@ async function cargarMetas() {
     const { data, error } = await supabase
         .from('savings_goals')
         .select('*')
+        .eq('user_id', usuario.id)
         .order('completada', { ascending: true })
         .order('created_at', { ascending: false })
 
@@ -75,6 +76,7 @@ const handleGuardar = async () => {
         monto_meta: parseFloat(form.monto_meta),
         monto_actual: parseFloat(form.monto_actual) || 0,
         fecha_limite: form.fecha_limite || null,
+        user_id: usuario.id,
     }
 
     if (metaEditando) {
@@ -157,10 +159,7 @@ const handleAbono = async (meta) => {
 
     const { error } = await supabase
         .from('savings_goals')
-        .update({
-        monto_actual: nuevoMonto,
-        completada,
-        })
+        .update({ monto_actual: nuevoMonto, completada })
         .eq('id', meta.id)
 
     if (error) throw error
@@ -194,7 +193,6 @@ if (error) return <p className="text-red-500 mt-8">Error: {error}</p>
 
 return (
     <div className="mt-8">
-      {/* Header */}
     <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-800">🎯 Metas de ahorro</h2>
         {!mostrarFormulario && (
@@ -212,7 +210,6 @@ return (
         )}
     </div>
 
-      {/* Formulario */}
     {mostrarFormulario && (
         <div className={`rounded-xl p-5 mb-6 ${metaEditando ? 'bg-amber-50 border-2 border-amber-400' : 'bg-gray-50 border border-gray-200'}`}>
         <h3 className="text-lg font-bold text-gray-800 mb-4">
@@ -306,7 +303,6 @@ return (
         </div>
     )}
 
-      {/* Lista de metas */}
     {metas.length === 0 ? (
         <div className="bg-gray-100 rounded-xl p-8 text-center text-gray-400">
         <p className="text-4xl mb-2">🎯</p>
@@ -330,7 +326,6 @@ return (
                 meta.completada ? 'opacity-70' : 'opacity-100'
                 }`}
             >
-                {/* Header tarjeta */}
                 <div className="flex items-start justify-between mb-3">
                 <div>
                     <h3 className={`font-bold text-gray-800 text-base ${meta.completada ? 'line-through text-gray-400' : ''}`}>
@@ -367,7 +362,6 @@ return (
                 </div>
                 </div>
 
-                {/* Montos */}
                 <div className="flex justify-between text-sm mb-2">
                 <span className="text-gray-500">
                     Ahorrado:{' '}
@@ -379,7 +373,6 @@ return (
                 </span>
                 </div>
 
-                {/* Barra de progreso */}
                 <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
                 <div
                     className="h-full rounded-full transition-all duration-500"
@@ -387,20 +380,16 @@ return (
                 />
                 </div>
 
-                {/* Porcentaje + faltante */}
                 <div className="flex justify-between text-xs mb-3">
                 <span className={`font-bold ${colorTexto}`}>{porcentaje}% completado</span>
                 {!meta.completada && faltante > 0 && (
-                    <span className="text-gray-400">
-                    Faltan {formatearMonto(faltante)}
-                    </span>
+                    <span className="text-gray-400">Faltan {formatearMonto(faltante)}</span>
                 )}
                 {meta.completada && (
                     <span className="text-emerald-500 font-bold">¡Meta alcanzada! 🎉</span>
                 )}
                 </div>
 
-                {/* Agregar abono */}
                 {!meta.completada && (
                 <div className="flex gap-2 mt-1">
                     <input

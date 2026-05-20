@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/AuthContext'
 
 function FormularioTransaccion({ onTransaccionCreada, transaccionAEditar, onCancelarEdicion }) {
+const { usuario } = useAuth()
 const [categorias, setCategorias] = useState([])
 const [enviando, setEnviando] = useState(false)
 const [mensaje, setMensaje] = useState(null)
@@ -64,6 +66,7 @@ const handleSubmit = async (e) => {
         tipo: form.tipo,
         category_id: parseInt(form.category_id),
         fecha: form.fecha,
+        user_id: usuario.id,
     }
 
     if (modoEdicion) {
@@ -112,7 +115,6 @@ return (
     </h2>
 
     <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Tipo */}
         <div>
         <label className={labelClass}>Tipo</label>
         <select
@@ -127,7 +129,6 @@ return (
         </select>
         </div>
 
-        {/* Categoría */}
         <div>
         <label className={labelClass}>Categoría</label>
         <select
@@ -144,7 +145,6 @@ return (
         </select>
         </div>
 
-        {/* Descripción */}
         <div>
         <label className={labelClass}>Descripción</label>
         <input
@@ -158,7 +158,6 @@ return (
         />
         </div>
 
-        {/* Monto */}
         <div>
         <label className={labelClass}>Monto (CLP)</label>
         <input
@@ -174,7 +173,6 @@ return (
         />
         </div>
 
-        {/* Fecha */}
         <div>
         <label className={labelClass}>Fecha</label>
         <input
@@ -187,7 +185,6 @@ return (
         />
         </div>
 
-        {/* Botones */}
         <div className="flex gap-3 pt-1">
         <button
             type="submit"
@@ -218,7 +215,6 @@ return (
         )}
         </div>
 
-        {/* Mensaje */}
         {mensaje && (
         <p className={`font-bold mt-2 ${mensaje.tipo === 'ok' ? 'text-emerald-600' : 'text-red-500'}`}>
             {mensaje.texto}
