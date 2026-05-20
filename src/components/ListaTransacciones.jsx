@@ -61,82 +61,74 @@ const handleEliminar = async (tx) => {
     }
 }
 
-const formatearMonto = (monto) => {
-    return new Intl.NumberFormat('es-CL', {
+const formatearMonto = (monto) =>
+    new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
     maximumFractionDigits: 0,
     }).format(monto)
-}
 
-const formatearFecha = (fecha) => {
-    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-CL', {
+const formatearFecha = (fecha) =>
+    new Date(fecha + 'T00:00:00').toLocaleDateString('es-CL', {
     day: '2-digit',
     month: 'short',
     })
-}
 
-if (cargando) return <p>Cargando transacciones...</p>
-if (error) return <p style={{ color: 'red' }}>Error: {error}</p>
+if (cargando) return <p className="text-gray-500 mt-8">Cargando transacciones...</p>
+if (error) return <p className="text-red-500 mt-8">Error: {error}</p>
 
 return (
-    <div style={{ marginTop: '2rem' }}>
-    <h2>Mis transacciones ({transacciones.length})</h2>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="mt-8">
+    <h2 className="text-xl font-semibold text-gray-800 mb-3">
+        Mis transacciones ({transacciones.length})
+    </h2>
+
+    <div className="flex flex-col gap-2">
         {transacciones.map((tx) => {
         const esIngreso = tx.tipo === 'ingreso'
         const estaEliminando = eliminandoId === tx.id
+
         return (
             <div
             key={tx.id}
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.75rem 1rem',
-                background: '#f5f5f5',
-                borderRadius: '8px',
-                borderLeft: `4px solid ${tx.categories?.color || '#999'}`,
-                color: '#333',
-                opacity: estaEliminando ? 0.5 : 1,
-                transition: 'opacity 0.2s',
-            }}
+            className={`flex items-center justify-between px-4 py-3 bg-gray-100 rounded-lg transition-opacity ${
+                estaEliminando ? 'opacity-50' : 'opacity-100'
+            }`}
+            style={{ borderLeft: `4px solid ${tx.categories?.color || '#999'}` }}
             >
-            <div style={{ flex: 1 }}>
-                <strong>{tx.descripcion}</strong>
-                <div style={{ fontSize: '0.85em', color: '#666', marginTop: '2px' }}>
+              {/* Info */}
+            <div className="flex-1">
+                <strong className="text-gray-800">{tx.descripcion}</strong>
+                <div className="text-xs text-gray-500 mt-0.5">
                 {tx.categories?.nombre || 'Sin categoría'} · {formatearFecha(tx.fecha)}
                 </div>
             </div>
+
+              {/* Monto */}
             <div
-                style={{
-                fontWeight: 'bold',
-                color: esIngreso ? '#10B981' : '#EF4444',
-                fontSize: '1.05em',
-                marginRight: '1rem',
-                }}
+                className={`font-bold text-base mr-4 ${
+                esIngreso ? 'text-emerald-500' : 'text-red-500'
+                }`}
             >
                 {esIngreso ? '+' : '-'} {formatearMonto(tx.monto)}
             </div>
 
+              {/* Botón editar */}
             <button
                 onClick={() => onEditarTransaccion && onEditarTransaccion(tx)}
                 disabled={estaEliminando}
                 title="Editar"
-                style={botonAccionStyle('#3B82F6')}
-                onMouseOver={(e) => (e.currentTarget.style.background = '#dbeafe')}
-                onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
+                className="p-1.5 rounded text-blue-500 hover:bg-blue-100 transition-colors disabled:cursor-not-allowed"
             >
                 ✏️
             </button>
 
+              {/* Botón eliminar */}
             <button
                 onClick={() => handleEliminar(tx)}
                 disabled={estaEliminando}
                 title="Eliminar"
-                style={botonAccionStyle('#EF4444')}
-                onMouseOver={(e) => (e.currentTarget.style.background = '#fee2e2')}
-                onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
+                className="p-1.5 rounded text-red-500 hover:bg-red-100 transition-colors disabled:cursor-not-allowed"
             >
                 🗑️
             </button>
@@ -147,16 +139,5 @@ return (
     </div>
 )
 }
-
-const botonAccionStyle = (color) => ({
-background: 'transparent',
-border: 'none',
-cursor: 'pointer',
-fontSize: '1.1em',
-padding: '0.25rem 0.5rem',
-borderRadius: '4px',
-color: color,
-transition: 'background 0.2s',
-})
 
 export default ListaTransacciones

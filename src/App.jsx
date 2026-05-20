@@ -4,7 +4,8 @@ import ListaTransacciones from './components/ListaTransacciones'
 import FormularioTransaccion from './components/FormularioTransaccion'
 import Dashboard from './components/Dashboard'
 import GraficoGastos from './components/GraficoGastos'
-import './App.css'
+import GestionPresupuestos from './components/GestionPresupuestos'
+import MetasAhorro from './components/MetasAhorro'
 
 function App() {
   const [categorias, setCategorias] = useState([])
@@ -13,7 +14,6 @@ function App() {
   const [recargarLista, setRecargarLista] = useState(0)
   const [transaccionAEditar, setTransaccionAEditar] = useState(null)
 
-  // Mes/año compartidos entre Dashboard y Gráfico
   const hoy = new Date()
   const [mes, setMes] = useState(hoy.getMonth() + 1)
   const [año, setAño] = useState(hoy.getFullYear())
@@ -51,57 +51,46 @@ function App() {
     setTransaccionAEditar(null)
   }
 
-  if (cargando) return <p>Cargando...</p>
-  if (error) return <p style={{ color: 'red' }}>Error: {error}</p>
+  if (cargando) return <p className="text-center mt-10 text-gray-500">Cargando...</p>
+  if (error) return <p className="text-center mt-10 text-red-500">Error: {error}</p>
 
   return (
-    <div
-      style={{
-        padding: '2rem',
-        fontFamily: 'sans-serif',
-        maxWidth: '1100px',
-        margin: '0 auto',
-      }}
-    >
-      <h1>💰 Money Tracker</h1>
+    <div className="max-w-5xl mx-auto px-6 py-8 font-sans">
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">💰 Money Tracker</h1>
 
-      {/* Dashboard + gráfico lado a lado en pantallas grandes */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
-          gap: '1.5rem',
-          marginBottom: '2rem',
-        }}
-      >
-        <Dashboard
-          recargar={recargarLista}
-          mes={mes}
-          setMes={setMes}
-          año={año}
-          setAño={setAño}
-        />
+      {/* Grid principal */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="flex flex-col gap-6">
+          <GestionPresupuestos
+            recargar={recargarLista}
+            mes={mes}
+            año={año}
+            onPresupuestoActualizado={handleTransaccionCreada}
+          />
+          <Dashboard
+            recargar={recargarLista}
+            mes={mes}
+            setMes={setMes}
+            año={año}
+            setAño={setAño}
+          />
+        </div>
         <GraficoGastos recargar={recargarLista} mes={mes} año={año} />
       </div>
 
-      <h2>Mis categorías ({categorias.length})</h2>
-      <ul style={{ listStyle: 'none', padding: 0 }}>
+      {/* Categorías */}
+      <h2 className="text-xl font-semibold text-gray-700 mb-3">
+        Mis categorías ({categorias.length})
+      </h2>
+      <ul className="space-y-2 mb-8">
         {categorias.map((cat) => (
           <li
             key={cat.id}
-            style={{
-              padding: '0.75rem 1rem',
-              margin: '0.5rem 0',
-              borderLeft: `4px solid ${cat.color}`,
-              background: '#f5f5f5',
-              borderRadius: '4px',
-              color: '#333',
-            }}
+            className="flex items-center px-4 py-3 bg-gray-100 rounded-md"
+            style={{ borderLeft: `4px solid ${cat.color}` }}
           >
-            <strong>{cat.nombre}</strong>
-            <span style={{ marginLeft: '1rem', color: '#666', fontSize: '0.9em' }}>
-              ({cat.tipo})
-            </span>
+            <strong className="text-gray-800">{cat.nombre}</strong>
+            <span className="ml-3 text-sm text-gray-500">({cat.tipo})</span>
           </li>
         ))}
       </ul>
@@ -117,6 +106,8 @@ function App() {
         recargar={recargarLista}
         onEditarTransaccion={handleEditarTransaccion}
       />
+      <MetasAhorro />
+      
     </div>
   )
 }

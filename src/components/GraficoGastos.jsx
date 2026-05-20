@@ -2,33 +2,22 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-const formatearMonto = (monto) => {
-return new Intl.NumberFormat('es-CL', {
+const formatearMonto = (monto) =>
+new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
     maximumFractionDigits: 0,
 }).format(monto)
-}
 
-// Componente del tooltip FUERA del componente principal
 function CustomTooltip({ active, payload, totalGastado }) {
 if (active && payload && payload.length) {
     const item = payload[0].payload
     const porcentaje = ((item.total / totalGastado) * 100).toFixed(1)
     return (
-    <div
-        style={{
-        background: 'white',
-        border: '1px solid #ccc',
-        padding: '0.5rem 0.75rem',
-        borderRadius: '4px',
-        color: '#333',
-        fontSize: '0.9em',
-        }}
-    >
-        <strong>{item.categoria}</strong>
+    <div className="bg-white border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 shadow-sm">
+        <strong className="block mb-0.5">{item.categoria}</strong>
         <div>{formatearMonto(item.total)}</div>
-        <div style={{ color: '#666' }}>
+        <div className="text-gray-500">
         {porcentaje}% · {item.cantidad} transacción{item.cantidad > 1 ? 'es' : ''}
         </div>
     </div>
@@ -67,39 +56,24 @@ useEffect(() => {
 
 const totalGastado = datos.reduce((sum, d) => sum + parseFloat(d.total), 0)
 
-if (cargando) return <p>Cargando gráfico...</p>
-if (error) return <p style={{ color: 'red' }}>Error: {error}</p>
+if (cargando) return <p className="text-gray-500">Cargando gráfico...</p>
+if (error) return <p className="text-red-500">Error: {error}</p>
 
 if (datos.length === 0) {
     return (
-    <div
-        style={{
-        background: '#f5f5f5',
-        padding: '2rem',
-        borderRadius: '8px',
-        textAlign: 'center',
-        color: '#666',
-        }}
-    >
-        <h3 style={{ marginTop: 0, color: '#333' }}>🥧 Gastos por categoría</h3>
-        <p style={{ fontStyle: 'italic' }}>No hay gastos registrados en este período.</p>
+    <div className="bg-gray-100 rounded-lg p-8 text-center text-gray-500">
+        <h3 className="text-lg font-semibold text-gray-700 mb-2">🥧 Gastos por categoría</h3>
+        <p className="italic">No hay gastos registrados en este período.</p>
     </div>
     )
 }
 
 return (
-    <div
-    style={{
-        background: '#f5f5f5',
-        padding: '1rem 1.5rem 1.5rem',
-        borderRadius: '8px',
-        color: '#333',
-    }}
-    >
-    <h3 style={{ marginTop: 0 }}>🥧 Gastos por categoría</h3>
-    <p style={{ color: '#666', fontSize: '0.9em', marginBottom: '1rem' }}>
+    <div className="bg-gray-100 rounded-lg px-6 pt-4 pb-6 text-gray-800">
+    <h3 className="text-lg font-semibold mb-1">🥧 Gastos por categoría</h3>
+    <p className="text-sm text-gray-500 mb-4">
         Total gastado:{' '}
-        <strong style={{ color: '#EF4444' }}>{formatearMonto(totalGastado)}</strong>
+        <strong className="text-red-500">{formatearMonto(totalGastado)}</strong>
     </p>
 
     <ResponsiveContainer width="100%" height={280}>

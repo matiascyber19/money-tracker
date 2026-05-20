@@ -1,24 +1,36 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
+const formatearMonto = (monto) =>
+new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+}).format(monto)
+
+const meses = [
+'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+]
+
 function Dashboard({ recargar, mes, setMes, año, setAño }) {
-const [presupuestos, setPresupuestos] = useState([])
+const [gastos, setGastos] = useState([])
 const [cargando, setCargando] = useState(true)
 const [error, setError] = useState(null)
 
 useEffect(() => {
-    async function cargarPresupuestos() {
+    async function cargarGastos() {
     try {
         setCargando(true)
         const { data, error } = await supabase
-        .from('budget_summary')
+        .from('gastos_por_categoria')
         .select('*')
         .eq('mes', mes)
         .eq('año', año)
-        .order('porcentaje_usado', { ascending: false })
+        .order('total', { ascending: false })
 
         if (error) throw error
-        setPresupuestos(data)
+        setGastos(data)
     } catch (err) {
         setError(err.message)
     } finally {
@@ -26,160 +38,82 @@ useEffect(() => {
     }
     }
 
-    cargarPresupuestos()
+    cargarGastos()
 }, [mes, año, recargar])
 
-const formatearMonto = (monto) => {
-    return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    maximumFractionDigits: 0,
-    }).format(monto)
-}
+const totalGastado = gastos.reduce((sum, g) => sum + parseFloat(g.total), 0)
 
-  // Color de la barra según el % usado
-const getColorBarra = (porcentaje) => {
-    if (porcentaje >= 100) return '#EF4444'
-    if (porcentaje >= 80) return '#F59E0B'
-    if (porcentaje >= 60) return '#FBBF24'
-    return '#10B981'
-}
-
-  // Mensaje según el % usado
-const getMensaje = (porcentaje) => {
-    if (porcentaje >= 100) return '🚨 ¡Te pasaste del presupuesto!'
-    if (porcentaje >= 80) return '⚠️ Cuidado, vas alto'
-    if (porcentaje >= 60) return '👀 Atención'
-    return '✅ Vas bien'
-}
-
-const meses = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]
-
-if (cargando) return <p>Cargando dashboard...</p>
-if (error) return <p style={{ color: 'red' }}>Error: {error}</p>
+if (cargando) return <p className="text-gray-500">Cargando dashboard...</p>
+if (error) return <p className="text-red-500">Error: {error}</p>
 
 return (
-    <div>
-    <div
-        style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '1rem',
-        }}
-    >
-        <h2 style={{ margin: 0 }}>📊 Dashboard</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+    <div className="bg-gray-100 rounded-xl p-5 text-gray-800">
+      {/* Header con selectores */}
+    <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">📊 Gastos por categoría</h2>
+        <div className="flex gap-2">
         <select
             value={mes}
             onChange={(e) => setMes(parseInt(e.target.value))}
-            style={selectStyle}
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
             {meses.map((nombre, i) => (
-            <option key={i + 1} value={i + 1}>
-                {nombre}
-            </option>
+            <option key={i + 1} value={i + 1}>{nombre}</option>
             ))}
         </select>
         <select
             value={año}
             onChange={(e) => setAño(parseInt(e.target.value))}
-            style={selectStyle}
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
             {[2025, 2026, 2027].map((y) => (
-            <option key={y} value={y}>
-                {y}
-            </option>
+            <option key={y} value={y}>{y}</option>
             ))}
         </select>
         </div>
     </div>
 
-    {presupuestos.length === 0 ? (
-        <p style={{ color: '#999', fontStyle: 'italic' }}>
-        No hay presupuestos para {meses[mes - 1]} {año}.
+      {/* Total del mes */}
+    {gastos.length > 0 && (
+        <div className="bg-white rounded-lg px-4 py-3 mb-4 flex justify-between items-center">
+        <span className="text-sm text-gray-500 font-medium">Total gastado</span>
+        <span className="font-bold text-red-500">{formatearMonto(totalGastado)}</span>
+        </div>
+    )}
+
+      {/* Lista de categorías */}
+    {gastos.length === 0 ? (
+        <p className="text-gray-400 italic text-sm">
+        No hay gastos registrados en {meses[mes - 1]} {año}.
         </p>
     ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {presupuestos.map((p) => {
-            const colorBarra = getColorBarra(p.porcentaje_usado)
-            const anchoBarra = Math.min(p.porcentaje_usado, 100)
+        <div className="flex flex-col gap-3">
+        {gastos.map((g) => {
+            const porcentaje = Math.round((parseFloat(g.total) / totalGastado) * 100)
             return (
             <div
-                key={p.budget_id}
-                style={{
-                background: '#f5f5f5',
-                padding: '1rem',
-                borderRadius: '8px',
-                borderLeft: `4px solid ${p.categoria_color}`,
-                color: '#333',
-                }}
+                key={g.category_id}
+                className="bg-white rounded-lg px-4 py-3"
+                style={{ borderLeft: `4px solid ${g.color}` }}
             >
-                <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '0.5rem',
-                }}
-                >
-                <strong style={{ fontSize: '1.1em' }}>{p.categoria}</strong>
-                <span style={{ fontWeight: 'bold', color: colorBarra }}>
-                    {p.porcentaje_usado}%
-                </span>
+                {/* Nombre + monto */}
+                <div className="flex justify-between items-center mb-1.5">
+                <span className="font-semibold text-gray-800">{g.categoria}</span>
+                <span className="font-bold text-gray-700">{formatearMonto(g.total)}</span>
                 </div>
 
+                {/* Barra de proporción */}
+                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-1">
                 <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '0.9em',
-                    color: '#666',
-                    marginBottom: '0.5rem',
-                }}
-                >
-                <span>
-                    Gastado: <strong style={{ color: '#333' }}>{formatearMonto(p.gastado)}</strong>
-                </span>
-                <span>
-                    Disponible:{' '}
-                    <strong style={{ color: '#333' }}>{formatearMonto(p.disponible)}</strong>
-                </span>
-                </div>
-
-                <div
-                style={{
-                    width: '100%',
-                    height: '10px',
-                    background: '#e5e7eb',
-                    borderRadius: '5px',
-                    overflow: 'hidden',
-                }}
-                >
-                <div
-                    style={{
-                    width: `${anchoBarra}%`,
-                    height: '100%',
-                    background: colorBarra,
-                    transition: 'width 0.3s ease',
-                    }}
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${porcentaje}%`, background: g.color }}
                 />
                 </div>
 
-                <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '0.85em',
-                    marginTop: '0.5rem',
-                }}
-                >
-                <span style={{ color: colorBarra, fontWeight: 'bold' }}>
-                    {getMensaje(p.porcentaje_usado)}
-                </span>
-                <span style={{ color: '#666' }}>de {formatearMonto(p.presupuesto)}</span>
+                {/* Porcentaje + transacciones */}
+                <div className="flex justify-between text-xs text-gray-400">
+                <span>{porcentaje}% del total</span>
+                <span>{g.cantidad} transacción{g.cantidad > 1 ? 'es' : ''}</span>
                 </div>
             </div>
             )
@@ -188,16 +122,6 @@ return (
     )}
     </div>
 )
-}
-
-const selectStyle = {
-padding: '0.4rem 0.6rem',
-borderRadius: '4px',
-border: '1px solid #d1d5db',
-fontSize: '0.9rem',
-background: 'white',
-color: '#333',
-cursor: 'pointer',
 }
 
 export default Dashboard

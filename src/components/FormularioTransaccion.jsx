@@ -8,7 +8,6 @@ const [mensaje, setMensaje] = useState(null)
 
 const modoEdicion = !!transaccionAEditar
 
-  // Estado inicial calculado: si hay transacción a editar, usar sus datos; si no, valores vacíos
 const formInicial = transaccionAEditar
     ? {
         descripcion: transaccionAEditar.descripcion,
@@ -27,7 +26,6 @@ const formInicial = transaccionAEditar
 
 const [form, setForm] = useState(formInicial)
 
-  // Cargar categorías al montar
 useEffect(() => {
     async function cargarCategorias() {
     const { data, error } = await supabase
@@ -39,11 +37,8 @@ useEffect(() => {
     cargarCategorias()
 }, [])
 
-  // Scrollear arriba cuando entra en modo edición
 useEffect(() => {
-    if (modoEdicion) {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    if (modoEdicion) window.scrollTo({ top: 0, behavior: 'smooth' })
 }, [modoEdicion])
 
 const categoriasFiltradas = categorias.filter((c) => c.tipo === form.tipo)
@@ -76,7 +71,6 @@ const handleSubmit = async (e) => {
         .from('transactions')
         .update(datos)
         .eq('id', transaccionAEditar.id)
-
         if (error) throw error
         setMensaje({ tipo: 'ok', texto: '✅ Transacción actualizada' })
     } else {
@@ -100,33 +94,32 @@ const handleSubmit = async (e) => {
     }
 }
 
-const handleCancelar = () => {
-    if (onCancelarEdicion) onCancelarEdicion()
-}
+const inputClass =
+    'w-full px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-400'
+
+const labelClass = 'block mb-1 font-semibold text-gray-700 text-sm'
 
 return (
     <div
-    style={{
-        background: modoEdicion ? '#fef3c7' : '#f9fafb',
-        padding: '1.5rem',
-        borderRadius: '8px',
-        marginTop: '2rem',
-        color: '#333',
-        border: modoEdicion ? '2px solid #f59e0b' : 'none',
-    }}
+    className={`mt-8 p-6 rounded-xl ${
+        modoEdicion
+        ? 'bg-amber-50 border-2 border-amber-400'
+        : 'bg-gray-50 border border-gray-200'
+    }`}
     >
-    <h2 style={{ marginTop: 0 }}>
+    <h2 className="text-xl font-bold text-gray-800 mb-4">
         {modoEdicion ? '✏️ Editar transacción' : '➕ Nueva transacción'}
     </h2>
 
-    <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-        <label style={labelStyle}>Tipo</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Tipo */}
+        <div>
+        <label className={labelClass}>Tipo</label>
         <select
             name="tipo"
             value={form.tipo}
             onChange={handleTipoChange}
-            style={inputStyle}
+            className={inputClass}
             required
         >
             <option value="gasto">Gasto</option>
@@ -134,39 +127,40 @@ return (
         </select>
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-        <label style={labelStyle}>Categoría</label>
+        {/* Categoría */}
+        <div>
+        <label className={labelClass}>Categoría</label>
         <select
             name="category_id"
             value={form.category_id}
             onChange={handleChange}
-            style={inputStyle}
+            className={inputClass}
             required
         >
             <option value="">Selecciona una categoría</option>
             {categoriasFiltradas.map((c) => (
-            <option key={c.id} value={c.id}>
-                {c.nombre}
-            </option>
+            <option key={c.id} value={c.id}>{c.nombre}</option>
             ))}
         </select>
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-        <label style={labelStyle}>Descripción</label>
+        {/* Descripción */}
+        <div>
+        <label className={labelClass}>Descripción</label>
         <input
             type="text"
             name="descripcion"
             value={form.descripcion}
             onChange={handleChange}
             placeholder="Ej: Almuerzo con amigos"
-            style={inputStyle}
+            className={inputClass}
             required
         />
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-        <label style={labelStyle}>Monto (CLP)</label>
+        {/* Monto */}
+        <div>
+        <label className={labelClass}>Monto (CLP)</label>
         <input
             type="number"
             name="monto"
@@ -175,38 +169,36 @@ return (
             placeholder="10000"
             min="1"
             step="1"
-            style={inputStyle}
+            className={inputClass}
             required
         />
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-        <label style={labelStyle}>Fecha</label>
+        {/* Fecha */}
+        <div>
+        <label className={labelClass}>Fecha</label>
         <input
             type="date"
             name="fecha"
             value={form.fecha}
             onChange={handleChange}
-            style={inputStyle}
+            className={inputClass}
             required
         />
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        {/* Botones */}
+        <div className="flex gap-3 pt-1">
         <button
             type="submit"
             disabled={enviando}
-            style={{
-            background: enviando ? '#9ca3af' : modoEdicion ? '#f59e0b' : '#3B82F6',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '6px',
-            cursor: enviando ? 'not-allowed' : 'pointer',
-            fontWeight: 'bold',
-            fontSize: '1rem',
-            flex: 1,
-            }}
+            className={`flex-1 py-2.5 px-6 rounded-lg font-bold text-white text-base transition-colors ${
+            enviando
+                ? 'bg-gray-400 cursor-not-allowed'
+                : modoEdicion
+                ? 'bg-amber-400 hover:bg-amber-500'
+                : 'bg-blue-500 hover:bg-blue-600'
+            }`}
         >
             {enviando
             ? 'Guardando...'
@@ -218,54 +210,23 @@ return (
         {modoEdicion && (
             <button
             type="button"
-            onClick={handleCancelar}
-            style={{
-                background: '#e5e7eb',
-                color: '#333',
-                border: 'none',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '1rem',
-            }}
+            onClick={onCancelarEdicion}
+            className="py-2.5 px-6 rounded-lg font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
             >
             Cancelar
             </button>
         )}
         </div>
 
+        {/* Mensaje */}
         {mensaje && (
-        <p
-            style={{
-            marginTop: '1rem',
-            color: mensaje.tipo === 'ok' ? '#10B981' : '#EF4444',
-            fontWeight: 'bold',
-            }}
-        >
+        <p className={`font-bold mt-2 ${mensaje.tipo === 'ok' ? 'text-emerald-600' : 'text-red-500'}`}>
             {mensaje.texto}
         </p>
         )}
     </form>
     </div>
 )
-}
-
-const labelStyle = {
-display: 'block',
-marginBottom: '0.25rem',
-fontWeight: 'bold',
-}
-
-const inputStyle = {
-width: '100%',
-padding: '0.5rem',
-borderRadius: '4px',
-border: '1px solid #d1d5db',
-fontSize: '1rem',
-background: 'white',
-color: '#333',
-boxSizing: 'border-box',
 }
 
 export default FormularioTransaccion
