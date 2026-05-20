@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard'
 import GraficoGastos from './components/GraficoGastos'
 import GestionPresupuestos from './components/GestionPresupuestos'
 import MetasAhorro from './components/MetasAhorro'
+import './App.css'
 
 function App() {
   const [categorias, setCategorias] = useState([])
@@ -107,7 +108,7 @@ function App() {
         onEditarTransaccion={handleEditarTransaccion}
       />
       <MetasAhorro />
-      
+
     </div>
   )
 }
